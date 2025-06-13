@@ -169,9 +169,7 @@ export default function Home() {
           </div>
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 animate-fade-in stagger-1">
             Slutt på{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 animate-shimmer">
-              matsvinn
-            </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">matsvinn</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in stagger-2">
             Smarthylle bruker kunstig intelligens for å redusere matsvinn ved å tilby smarte rabatter på varer som

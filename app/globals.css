@@ -65,6 +65,20 @@
   }
 }
 
+/* Gradient text fix */
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Fallback for gradient text */
+@supports not (-webkit-background-clip: text) {
+  .text-transparent.bg-clip-text {
+    color: #0284c7; /* fallback blue color */
+  }
+}
+
 /* Enhanced animations */
 @keyframes fade-in {
   from {
