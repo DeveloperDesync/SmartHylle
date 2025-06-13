@@ -1,0 +1,22 @@
+{
+  "name": "Smarthylle - Reduser matsvinn med AI",
+  "short_name": "Smarthylle",
+  "description": "AI-drevet plattform for å redusere matsvinn gjennom smarte tilbud",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/icon-512x512.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
