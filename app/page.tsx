@@ -6,6 +6,8 @@ import PresentationModal from "@/components/PresentationModal"
 import DemoModal from "@/components/DemoModal"
 import QuizModal from "@/components/QuizModal"
 import BackgroundVideo from "@/components/BackgroundVideo"
+// Legg til import for den nye komponenten øverst i filen
+import ScrollStoryAnimation from "@/components/ScrollStoryAnimation"
 
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
@@ -524,6 +526,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Scroll Story Animation Section */}
+      <ScrollStoryAnimation />
+
       {/* Store Simulation Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto">
@@ -557,6 +562,115 @@ export default function Home() {
 
           <div className="animate-fade-in stagger-3">
             <StoreSimulation />
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Tools Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 animate-fade-in">
+              Interaktive verktøy
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto animate-fade-in stagger-1">
+              Utforsk våre smarte verktøy for å lære mer om matsvinn og miljøpåvirkning
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Waste Calculator Button */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-8 text-center hover-lift animate-fade-in border border-red-100 dark:border-red-800">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-6 animate-scale-in">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-red-600 dark:text-red-400"
+                >
+                  <path d="M3 6h18l-1.5 9a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 6Z" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Matsvinn Kalkulator</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Beregn hvor mye mat du kaster og se den virkelige miljøpåvirkningen. Få visualisert CO₂-utslipp,
+                energiforbruk og mer.
+              </p>
+              <a
+                href="/kalkulator"
+                className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all duration-200 hover-lift"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <rect x="9" y="9" width="6" height="6" />
+                  <path d="M9 1v6M15 1v6M9 15v6M15 15v6M1 9h6M1 15h6M17 9h6M17 15h6" />
+                </svg>
+                Beregn påvirkning
+              </a>
+            </div>
+
+            {/* AI Chatbot Button */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-8 text-center hover-lift animate-fade-in stagger-1 border border-purple-100 dark:border-purple-800">
+              <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-6 animate-scale-in">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-purple-600 dark:text-purple-400"
+                >
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">AI Matsvinn-ekspert</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Chat med vår AI-ekspert om matsvinn, miljøpåvirkning og bærekraftige løsninger. Få svar på alle dine
+                spørsmål.
+              </p>
+              <a
+                href="/chatbot"
+                className="inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-all duration-200 hover-lift"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Chat med AI
+              </a>
+            </div>
           </div>
         </div>
       </section>
