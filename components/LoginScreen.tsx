@@ -18,12 +18,12 @@ interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<boolean>
   rememberMe: boolean
   onRememberMeChange: (checked: boolean) => void
+  loginError?: string
 }
 
-export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange }: LoginScreenProps) {
+export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange, loginError }: LoginScreenProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
 
@@ -44,12 +44,11 @@ export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     setIsLoading(true)
 
     const success = await onLogin(username, password)
     if (!success) {
-      setError("Ugyldig brukernavn eller passord eller bruker er utestengt")
+      // Error message is now handled by parent component
     }
 
     setIsLoading(false)
@@ -132,7 +131,6 @@ export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange }:
 
   const toggleRegisterMode = () => {
     setShowRegister(!showRegister)
-    setError("")
     setRegisterError("")
     setRegisterSuccess("")
     // Reset register form
@@ -201,7 +199,11 @@ export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange }:
                 />
               </div>
 
-              {error && <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{error}</div>}
+              {loginError && (
+                <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">
+                  {loginError}
+                </div>
+              )}
 
               <div className="flex items-center space-x-2">
                 <Checkbox id="remember" checked={rememberMe} onCheckedChange={onRememberMeChange} />

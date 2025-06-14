@@ -1,4 +1,5 @@
 export interface User {
+  id?: string
   username: string
   password: string
   role: "user" | "admin"
@@ -7,6 +8,9 @@ export interface User {
   favorites?: string[]
   barcode?: string
   itemsSaved?: number
+  createdAt?: string
+  lastLogin?: string | null
+  updatedAt?: string
 }
 
 export interface Warning {
@@ -18,17 +22,18 @@ export interface Warning {
 }
 
 export interface Offer {
-  id: string
+  id?: string
   productName: string
   discount: number
   expiryDate: string
   description: string
   aiSuggested?: boolean
   approved?: boolean
+  createdAt?: string
 }
 
 export interface Notification {
-  id: string
+  id?: string
   productName: string
   discount: number
   description: string

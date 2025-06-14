@@ -5,6 +5,7 @@ import StoreSimulation from "@/components/StoreSimulation"
 import PresentationModal from "@/components/PresentationModal"
 import DemoModal from "@/components/DemoModal"
 import QuizModal from "@/components/QuizModal"
+import BackgroundVideo from "@/components/BackgroundVideo"
 
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
@@ -12,6 +13,7 @@ export default function Home() {
   const [showPresentation, setShowPresentation] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
+  const [showBackgroundVideo, setShowBackgroundVideo] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -104,6 +106,12 @@ export default function Home() {
                   className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors hover-scale"
                 >
                   Quiz
+                </button>
+                <button
+                  onClick={() => setShowBackgroundVideo(true)}
+                  className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors hover-scale"
+                >
+                  Bakgrunnsvideo
                 </button>
               </nav>
               <button
@@ -217,6 +225,26 @@ export default function Home() {
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               Se presentasjon
+            </button>
+            <button
+              onClick={() => setShowBackgroundVideo(true)}
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover-lift"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-2"
+              >
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              Bakgrunnsvideo
             </button>
           </div>
         </div>
@@ -645,6 +673,11 @@ export default function Home() {
                     Quiz
                   </button>
                 </li>
+                <li>
+                  <button onClick={() => setShowBackgroundVideo(true)} className="hover:text-white transition-colors">
+                    Bakgrunnsvideo
+                  </button>
+                </li>
               </ul>
             </div>
 
@@ -712,6 +745,7 @@ export default function Home() {
       <PresentationModal isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
       <DemoModal isOpen={showDemo} onClose={() => setShowDemo(false)} />
       <QuizModal isOpen={showQuiz} onClose={() => setShowQuiz(false)} />
+      <BackgroundVideo isOpen={showBackgroundVideo} onClose={() => setShowBackgroundVideo(false)} />
     </div>
   )
 }

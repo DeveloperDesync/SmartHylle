@@ -1,335 +1,240 @@
-import type { User, Notification, Offer, AIRecommendation } from "@/types"
+import type { User, Offer, Notification } from "@/types"
 
-// Lokal lagring nøkler
 const STORAGE_KEYS = {
   USERS: "smarthylle-users",
-  NOTIFICATIONS: "smarthylle-notifications",
   OFFERS: "smarthylle-offers",
-  AI_RECOMMENDATIONS: "smarthylle-ai-recommendations",
+  NOTIFICATIONS: "smarthylle-notifications",
+  INITIALIZED: "smarthylle-initialized",
 }
 
-// Initialiser med standard data hvis ikke eksisterer
-export function initializeLocalStorage() {
-  if (typeof window === "undefined") return
-
-  // Initialiser brukere
-  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    const defaultUsers: User[] = [
-      // Vanlige brukere
-      {
-        username: "bruker1",
-        password: "pass1",
-        role: "user",
-        itemsSaved: 45,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH001123456",
-      },
-      {
-        username: "bruker2",
-        password: "pass2",
-        role: "user",
-        itemsSaved: 32,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH002123456",
-      },
-      {
-        username: "bruker3",
-        password: "pass3",
-        role: "user",
-        itemsSaved: 67,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH003123456",
-      },
-      {
-        username: "bruker4",
-        password: "pass4",
-        role: "user",
-        itemsSaved: 23,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH004123456",
-      },
-      {
-        username: "bruker5",
-        password: "pass5",
-        role: "user",
-        itemsSaved: 89,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH005123456",
-      },
-      {
-        username: "bruker6",
-        password: "pass6",
-        role: "user",
-        itemsSaved: 12,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH006123456",
-      },
-      {
-        username: "bruker7",
-        password: "pass7",
-        role: "user",
-        itemsSaved: 56,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH007123456",
-      },
-      {
-        username: "bruker8",
-        password: "pass8",
-        role: "user",
-        itemsSaved: 78,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH008123456",
-      },
-      {
-        username: "bruker9",
-        password: "pass9",
-        role: "user",
-        itemsSaved: 34,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH009123456",
-      },
-      {
-        username: "bruker10",
-        password: "pass10",
-        role: "user",
-        itemsSaved: 91,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SH010123456",
-      },
-
-      // Admin brukere
-      {
-        username: "admin1",
-        password: "adminpass1",
-        role: "admin",
-        itemsSaved: 0,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SHA001123456",
-      },
-      {
-        username: "admin2",
-        password: "adminpass2",
-        role: "admin",
-        itemsSaved: 0,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SHA002123456",
-      },
-      {
-        username: "admin3",
-        password: "adminpass3",
-        role: "admin",
-        itemsSaved: 0,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SHA003123456",
-      },
-      {
-        username: "admin4",
-        password: "adminpass4",
-        role: "admin",
-        itemsSaved: 0,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SHA004123456",
-      },
-      {
-        username: "admin5",
-        password: "adminpass5",
-        role: "admin",
-        itemsSaved: 0,
-        warnings: [],
-        banned: false,
-        favorites: [],
-        barcode: "SHA005123456",
-      },
-    ]
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers))
-  }
-
-  // Initialiser tilbud
-  if (!localStorage.getItem(STORAGE_KEYS.OFFERS)) {
-    const defaultOffers: Offer[] = [
-      {
-        id: "1",
-        productName: "Økologiske epler",
-        discount: 30,
-        expiryDate: "2024-12-20",
-        description: "Ferske økologiske epler som utløper snart",
-      },
-      {
-        id: "2",
-        productName: "Fullkornbrød",
-        discount: 50,
-        expiryDate: "2024-12-18",
-        description: "Hjemmebakt fullkornbrød med kort holdbarhet",
-      },
-      {
-        id: "3",
-        productName: "Yoghurt naturell",
-        discount: 25,
-        expiryDate: "2024-12-22",
-        description: "Kremete naturell yoghurt på tilbud",
-      },
-      {
-        id: "4",
-        productName: "Bananer",
-        discount: 40,
-        expiryDate: "2024-12-19",
-        description: "Modne bananer perfekte for smoothie",
-      },
-      {
-        id: "5",
-        productName: "Laks filet",
-        discount: 35,
-        expiryDate: "2024-12-21",
-        description: "Fersk laksfilet med kort holdbarhet",
-      },
-    ]
-    localStorage.setItem(STORAGE_KEYS.OFFERS, JSON.stringify(defaultOffers))
-  }
-
-  // Initialiser varsler
-  if (!localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)) {
-    const defaultNotifications: Notification[] = []
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(defaultNotifications))
-  }
-
-  // Initialiser AI-anbefalinger
-  if (!localStorage.getItem(STORAGE_KEYS.AI_RECOMMENDATIONS)) {
-    const defaultAIRecommendations: AIRecommendation[] = []
-    localStorage.setItem(STORAGE_KEYS.AI_RECOMMENDATIONS, JSON.stringify(defaultAIRecommendations))
-  }
-}
-
-// Bruker-funksjoner
+// User functions
 export function getUsers(): User[] {
   if (typeof window === "undefined") return []
-  const users = localStorage.getItem(STORAGE_KEYS.USERS)
-  return users ? JSON.parse(users) : []
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.USERS)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error("Error getting users from localStorage:", error)
+    return []
+  }
 }
 
-export function saveUsers(users: User[]) {
-  if (typeof window === "undefined") return
+export function createUser(userData: Omit<User, "id">): User {
+  const users = getUsers()
+
+  // Check if username already exists
+  if (users.some((u) => u.username === userData.username)) {
+    throw new Error("Username already exists")
+  }
+
+  const newUser: User = {
+    ...userData,
+    id: `user_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    lastLogin: null,
+    warnings: userData.warnings || [],
+    banned: userData.banned || false,
+    favorites: userData.favorites || [],
+    itemsSaved: userData.itemsSaved || 0,
+  }
+
+  const updatedUsers = [...users, newUser]
+  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers))
+
+  return newUser
+}
+
+export function updateUser(userId: string, updates: Partial<User>): void {
+  const users = getUsers()
+  const userIndex = users.findIndex((u) => u.id === userId)
+
+  if (userIndex === -1) {
+    throw new Error("User not found")
+  }
+
+  users[userIndex] = { ...users[userIndex], ...updates }
   localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users))
 }
 
-export function getUser(username: string): User | null {
-  const users = getUsers()
-  return users.find((user) => user.username === username) || null
-}
-
-export function updateUser(username: string, updates: Partial<User>) {
-  const users = getUsers()
-  const updatedUsers = users.map((user) => (user.username === username ? { ...user, ...updates } : user))
-  saveUsers(updatedUsers)
-}
-
-export function addUser(newUser: User): boolean {
-  const users = getUsers()
-  if (users.find((user) => user.username === newUser.username)) {
-    return false // Bruker eksisterer allerede
-  }
-  users.push(newUser)
-  saveUsers(users)
-  return true
-}
-
-// Tilbud-funksjoner
+// Offer functions
 export function getOffers(): Offer[] {
   if (typeof window === "undefined") return []
-  const offers = localStorage.getItem(STORAGE_KEYS.OFFERS)
-  return offers ? JSON.parse(offers) : []
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.OFFERS)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error("Error getting offers from localStorage:", error)
+    return []
+  }
 }
 
-export function saveOffers(offers: Offer[]) {
-  if (typeof window === "undefined") return
-  localStorage.setItem(STORAGE_KEYS.OFFERS, JSON.stringify(offers))
-}
-
-export function addOffer(offer: Offer) {
+export function createOffer(offerData: Omit<Offer, "id">): Offer {
   const offers = getOffers()
-  offers.unshift(offer)
-  saveOffers(offers)
+
+  const newOffer: Offer = {
+    ...offerData,
+    id: `offer_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  }
+
+  const updatedOffers = [newOffer, ...offers]
+  localStorage.setItem(STORAGE_KEYS.OFFERS, JSON.stringify(updatedOffers))
+
+  return newOffer
 }
 
-export function removeOffer(offerId: string) {
-  const offers = getOffers()
-  const filteredOffers = offers.filter((offer) => offer.id !== offerId)
-  saveOffers(filteredOffers)
-}
-
-// Varsling-funksjoner
+// Notification functions
 export function getNotifications(): Notification[] {
   if (typeof window === "undefined") return []
-  const notifications = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)
-  return notifications ? JSON.parse(notifications) : []
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error("Error getting notifications from localStorage:", error)
+    return []
+  }
 }
 
-export function saveNotifications(notifications: Notification[]) {
-  if (typeof window === "undefined") return
-  localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications))
-}
-
-export function addNotification(notification: Notification) {
+export function createNotification(notificationData: Omit<Notification, "id" | "timestamp">): Notification {
   const notifications = getNotifications()
-  notifications.unshift(notification)
-  // Behold bare de siste 10 varslene
-  if (notifications.length > 10) {
-    notifications.splice(10)
+
+  const newNotification: Notification = {
+    ...notificationData,
+    id: `notification_${Date.now()}`,
+    timestamp: new Date().toISOString(),
   }
-  saveNotifications(notifications)
+
+  const updatedNotifications = [newNotification, ...notifications.slice(0, 9)] // Keep only 10 most recent
+  localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updatedNotifications))
+
+  return newNotification
 }
 
-// AI-anbefalinger funksjoner
-export function getAIRecommendations(): AIRecommendation[] {
-  if (typeof window === "undefined") return []
-  const recommendations = localStorage.getItem(STORAGE_KEYS.AI_RECOMMENDATIONS)
-  return recommendations ? JSON.parse(recommendations) : []
-}
-
-export function saveAIRecommendations(recommendations: AIRecommendation[]) {
+// Initialize data
+export function initializeLocalData(): void {
   if (typeof window === "undefined") return
-  localStorage.setItem(STORAGE_KEYS.AI_RECOMMENDATIONS, JSON.stringify(recommendations))
-}
 
-export function addAIRecommendation(recommendation: AIRecommendation) {
-  const recommendations = getAIRecommendations()
-  recommendations.unshift(recommendation)
-  // Behold bare de siste 10 anbefalingene
-  if (recommendations.length > 10) {
-    recommendations.splice(10)
+  const isInitialized = localStorage.getItem(STORAGE_KEYS.INITIALIZED)
+  if (isInitialized) {
+    console.log("LocalStorage already initialized")
+    return
   }
-  saveAIRecommendations(recommendations)
-}
 
-export function updateAIRecommendation(id: string, updates: Partial<AIRecommendation>) {
-  const recommendations = getAIRecommendations()
-  const updatedRecommendations = recommendations.map((rec) => (rec.id === id ? { ...rec, ...updates } : rec))
-  saveAIRecommendations(updatedRecommendations)
+  console.log("Initializing localStorage with test data...")
+
+  // Initialize users
+  const initialUsers: User[] = [
+    {
+      id: "user_1",
+      username: "bruker1",
+      password: "pass1",
+      role: "user",
+      fullName: "Test Bruker 1",
+      itemsSaved: 15,
+      warnings: [],
+      favorites: [],
+      banned: false,
+      barcode: "SHBRU123456",
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+    },
+    {
+      id: "user_2",
+      username: "bruker2",
+      password: "pass2",
+      role: "user",
+      fullName: "Test Bruker 2",
+      itemsSaved: 8,
+      warnings: [],
+      favorites: [],
+      banned: false,
+      barcode: "SHBRU234567",
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+    },
+    {
+      id: "user_3",
+      username: "bruker3",
+      password: "pass3",
+      role: "user",
+      fullName: "Test Bruker 3",
+      itemsSaved: 23,
+      warnings: [],
+      favorites: [],
+      banned: false,
+      barcode: "SHBRU345678",
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+    },
+    {
+      id: "admin_1",
+      username: "admin1",
+      password: "adminpass1",
+      role: "admin",
+      fullName: "Admin 1",
+      itemsSaved: 0,
+      warnings: [],
+      favorites: [],
+      banned: false,
+      barcode: "SHADM123456",
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+    },
+    {
+      id: "admin_2",
+      username: "admin2",
+      password: "adminpass2",
+      role: "admin",
+      fullName: "Admin 2",
+      itemsSaved: 0,
+      warnings: [],
+      favorites: [],
+      banned: false,
+      barcode: "SHADM234567",
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+    },
+  ]
+
+  // Initialize offers
+  const initialOffers: Offer[] = [
+    {
+      id: "offer_1",
+      productName: "Økologisk melk",
+      discount: 30,
+      expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      description: "Fersk økologisk melk som utløper snart",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "offer_2",
+      productName: "Fersk laks",
+      discount: 40,
+      expiryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      description: "Høykvalitets laks med kort holdbarhet",
+      createdAt: new Date().toISOString(),
+    },
+  ]
+
+  // Initialize notifications
+  const initialNotifications: Notification[] = [
+    {
+      id: "notification_1",
+      productName: "Italiensk pasta",
+      discount: 25,
+      description: "Ny rabatt på italiensk pasta!",
+      timestamp: new Date().toISOString(),
+    },
+  ]
+
+  // Save to localStorage
+  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(initialUsers))
+  localStorage.setItem(STORAGE_KEYS.OFFERS, JSON.stringify(initialOffers))
+  localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(initialNotifications))
+  localStorage.setItem(STORAGE_KEYS.INITIALIZED, "true")
+
+  console.log("LocalStorage initialization completed")
 }

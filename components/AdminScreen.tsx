@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { User, Notification, Offer, AIRecommendation } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,6 +36,7 @@ import {
   Trophy,
   Leaf,
   Minus,
+  Search,
 } from "lucide-react"
 
 interface AdminScreenProps {
@@ -83,6 +84,7 @@ export default function AdminScreen({
   const [warningMessage, setWarningMessage] = useState("")
   const [isSubmittingWarning, setIsSubmittingWarning] = useState(false)
   const [warningSuccess, setWarningSuccess] = useState("")
+  const [userSearchQuery, setUserSearchQuery] = useState("")
 
   // State for ny bruker
   const [newUsername, setNewUsername] = useState("")
@@ -96,8 +98,26 @@ export default function AdminScreen({
   const [itemsToModify, setItemsToModify] = useState("")
   const [isModifyingItems, setIsModifyingItems] = useState(false)
   const [itemsModifiedMessage, setItemsModifiedMessage] = useState("")
+  const [itemsSearchQuery, setItemsSearchQuery] = useState("")
 
   const { theme, toggleTheme } = useTheme()
+
+  // Filtrer bort admin-brukeren som er logget inn
+  const filteredUsers = users.filter((u) => u.username !== user.username)
+
+  // Søkefunksjon for brukere i advarsel-seksjonen
+  const filteredUsersForWarning = useMemo(() => {
+    return filteredUsers
+      .filter((u) => u.role === "user")
+      .filter((u) => u.username.toLowerCase().includes(userSearchQuery.toLowerCase()))
+  }, [filteredUsers, userSearchQuery])
+
+  // Søkefunksjon for brukere i varer-seksjonen
+  const filteredUsersForItems = useMemo(() => {
+    return filteredUsers
+      .filter((u) => u.role === "user")
+      .filter((u) => u.username.toLowerCase().includes(itemsSearchQuery.toLowerCase()))
+  }, [filteredUsers, itemsSearchQuery])
 
   // Håndter sending av varsling
   const handleSubmitNotification = async (e: React.FormEvent) => {
@@ -140,11 +160,11 @@ export default function AdminScreen({
 
     // Reset form
     setWarningMessage("")
-    setWarningSuccess(`Advarsel sendt til ${selectedUser}!`)
+    setWarningSuccess(`Advarsel sendt til ${selectedUser}! Brukeren vil se meldingen ved neste innlogging.`)
     setIsSubmittingWarning(false)
 
-    // Fjern suksessmelding etter 3 sekunder
-    setTimeout(() => setWarningSuccess(""), 3000)
+    // Fjern suksessmelding etter 5 sekunder
+    setTimeout(() => setWarningSuccess(""), 5000)
   }
 
   // Håndter oppretting av ny bruker
@@ -194,11 +214,13 @@ export default function AdminScreen({
 
     // Reset form
     setItemsToModify("")
-    setItemsModifiedMessage(`${itemsToModify} varer lagt til for ${selectedUserForItems}!`)
+    setItemsModifiedMessage(
+      `${itemsToModify} varer lagt til for ${selectedUserForItems}! Brukeren får beskjed ved neste innlogging.`,
+    )
     setIsModifyingItems(false)
 
-    // Fjern suksessmelding etter 3 sekunder
-    setTimeout(() => setItemsModifiedMessage(""), 3000)
+    // Fjern suksessmelding etter 5 sekunder
+    setTimeout(() => setItemsModifiedMessage(""), 5000)
   }
 
   // Håndter fjerning av reddet varer
@@ -225,15 +247,14 @@ export default function AdminScreen({
 
     // Reset form
     setItemsToModify("")
-    setItemsModifiedMessage(`${itemsToRemove} varer fjernet fra ${selectedUserForItems}!`)
+    setItemsModifiedMessage(
+      `${itemsToRemove} varer fjernet fra ${selectedUserForItems}! Brukeren får beskjed ved neste innlogging.`,
+    )
     setIsModifyingItems(false)
 
-    // Fjern suksessmelding etter 3 sekunder
-    setTimeout(() => setItemsModifiedMessage(""), 3000)
+    // Fjern suksessmelding etter 5 sekunder
+    setTimeout(() => setItemsModifiedMessage(""), 5000)
   }
-
-  // Filtrer bort admin-brukeren som er logget inn
-  const filteredUsers = users.filter((u) => u.username !== user.username)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -396,21 +417,36 @@ export default function AdminScreen({
               <CardContent>
                 <form onSubmit={handleSubmitWarning} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="userSearch" className="text-sm font-medium">
+                      Søk etter bruker
+                    </Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="userSearch"
+                        type="text"
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        placeholder="Skriv brukernavn..."
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="selectedUser" className="text-sm font-medium">
-                      Velg bruker
+                      Velg bruker ({filteredUsersForWarning.length} funnet)
                     </Label>
                     <Select value={selectedUser} onValueChange={setSelectedUser} required>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg bruker" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredUsers
-                          .filter((u) => u.role === "user")
-                          .map((u) => (
-                            <SelectItem key={u.username} value={u.username}>
-                              {u.username} {u.banned ? "(Utestengt)" : ""}
-                            </SelectItem>
-                          ))}
+                        {filteredUsersForWarning.map((u) => (
+                          <SelectItem key={u.username} value={u.username}>
+                            {u.username} {u.banned ? "(Utestengt)" : ""} - {u.itemsSaved || 0} varer reddet
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -466,7 +502,7 @@ export default function AdminScreen({
                         <div>
                           <p className="font-medium">{u.username}</p>
                           <p className="text-xs text-gray-500">
-                            {u.warnings?.length || 0} advarsler • Rolle: {u.role}
+                            {u.warnings?.length || 0} advarsler • {u.itemsSaved || 0} varer reddet
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -510,7 +546,7 @@ export default function AdminScreen({
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        onClick={() => onRemoveOffer(offer.id)}
+                        onClick={() => onRemoveOffer(offer.id!)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -622,21 +658,36 @@ export default function AdminScreen({
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="itemsSearch" className="text-sm font-medium">
+                      Søk etter bruker
+                    </Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="itemsSearch"
+                        type="text"
+                        value={itemsSearchQuery}
+                        onChange={(e) => setItemsSearchQuery(e.target.value)}
+                        placeholder="Skriv brukernavn..."
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="selectedUserForItems" className="text-sm font-medium">
-                      Velg bruker
+                      Velg bruker ({filteredUsersForItems.length} funnet)
                     </Label>
                     <Select value={selectedUserForItems} onValueChange={setSelectedUserForItems} required>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg bruker" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredUsers
-                          .filter((u) => u.role === "user")
-                          .map((u) => (
-                            <SelectItem key={u.username} value={u.username}>
-                              {u.username} ({u.itemsSaved || 0} varer reddet)
-                            </SelectItem>
-                          ))}
+                        {filteredUsersForItems.map((u) => (
+                          <SelectItem key={u.username} value={u.username}>
+                            {u.username} ({u.itemsSaved || 0} varer reddet)
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -691,9 +742,9 @@ export default function AdminScreen({
 
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-800 dark:text-blue-200">
                     <p className="font-medium mb-1">💡 Tips:</p>
+                    <p>• Brukeren får automatisk beskjed om endringen ved neste innlogging</p>
                     <p>• Legg til varer når kunder scanner QR-kode i butikken</p>
                     <p>• Fjern varer hvis det er gjort en feil eller misbruk</p>
-                    <p>• Brukeren får automatisk beskjed om endringen</p>
                   </div>
                 </div>
               </CardContent>
