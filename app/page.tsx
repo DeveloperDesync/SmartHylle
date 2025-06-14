@@ -275,6 +275,160 @@ export default function Home() {
         </div>
       </section>
 
+      {/* UN SDG Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 via-green-600 to-blue-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-white/20 text-white mb-6 animate-bounce-in">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              FNs bærekraftsmål
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 animate-fade-in">
+              Vi kjemper for en bærekraftig fremtid
+            </h2>
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto animate-fade-in stagger-1">
+              Smarthylle bidrar direkte til FNs bærekraftsmål og arbeider for en bedre verden gjennom teknologi
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* SDG 12 */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover-lift animate-fade-in">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-500 flex items-center justify-center animate-scale-in">
+                <div className="text-white font-bold text-lg">12</div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Ansvarlig forbruk og produksjon</h3>
+              <p className="text-blue-100 mb-6">
+                Vi reduserer matsvinn ved å koble forbrukere med varer som nærmer seg utløpsdato, og fremmer ansvarlig
+                forbruk.
+              </p>
+              <div className="space-y-2 text-sm text-blue-200">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Reduserer matsvinn med opptil 40%
+                </div>
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Fremmer sirkulær økonomi
+                </div>
+              </div>
+            </div>
+
+            {/* SDG 13 */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover-lift animate-fade-in stagger-1">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-600 flex items-center justify-center animate-scale-in">
+                <div className="text-white font-bold text-lg">13</div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Stoppe klimaendringene</h3>
+              <p className="text-blue-100 mb-6">
+                Ved å redusere matsvinn bidrar vi til å senke CO₂-utslipp og bekjempe klimaendringene aktivt.
+              </p>
+              <div className="space-y-2 text-sm text-blue-200">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  2. 5 tonn CO₂ spart årlig
+                </div>
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Reduserer miljøpåvirkning
+                </div>
+              </div>
+            </div>
+
+            {/* SDG 17 */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover-lift animate-fade-in stagger-2">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-800 flex items-center justify-center animate-scale-in">
+                <div className="text-white font-bold text-lg">17</div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">Samarbeid for å nå målene</h3>
+              <p className="text-blue-100 mb-6">
+                Vi bygger partnerskap mellom butikker, forbrukere og teknologi for å skape bærekraftige løsninger
+                sammen.
+              </p>
+              <div className="space-y-2 text-sm text-blue-200">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Kobler butikker og forbrukere
+                </div>
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Teknologi for bærekraft
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* UN Logo and Link */}
+          <div className="text-center mt-12 animate-fade-in stagger-3">
+            <div className="inline-flex items-center space-x-4 bg-white/10 backdrop-blur-md rounded-full px-6 py-3">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 text-blue-600" fill="currentColor">
+                  <circle cx="12" cy="12" r="10" />
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                    fill="white"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-white font-semibold">FNs bærekraftsmål</p>
+                <p className="text-blue-200 text-sm">Sammen for en bærekraftig fremtid</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
