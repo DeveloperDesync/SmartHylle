@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useTheme } from "@/contexts/ThemeContext"
 import { Moon, Sun, UserPlus, Shield, Eye, EyeOff } from "lucide-react"
 import Footer from "@/components/Footer"
-import * as storage from "@/lib/localStorage"
+import { userAPI } from "@/lib/api"
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<boolean>
@@ -91,41 +91,41 @@ export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange, l
     // Simulate registration delay
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // Create new user
-    const newUser = {
+    // Create new user using unified API (will use Supabase if available, localStorage as fallback)
+    const newUserData = {
       username: registerUsername.trim(),
       password: registerPassword,
       role: isAdmin ? ("admin" as const) : ("user" as const),
+      fullName: `${registerUsername} (${isAdmin ? "Admin" : "Bruker"})`,
       itemsSaved: 0,
-      warnings: [],
       banned: false,
       favorites: [],
       barcode: `SH${registerUsername.toUpperCase().slice(0, 3)}${Math.random().toString().slice(2, 8)}`,
     }
 
-    // Try to add user
     try {
-      const createdUser = storage.localStorageAPI.createUser(newUser)
-      const success = !!createdUser
+      console.log("🔄 Creating user with unified API:", newUserData)
+      const createdUser = await userAPI.createUser(newUserData)
+      console.log("✅ User created successfully:", createdUser)
 
-      if (success) {
-        setRegisterSuccess(`Bruker "${registerUsername}" opprettet! Du kan nå logge inn.`)
-        // Reset form
-        setRegisterUsername("")
-        setRegisterPassword("")
-        setConfirmPassword("")
-        setIsAdmin(false)
-        setAdminCode("")
-        setShowAdminCode(false)
+      setRegisterSuccess(`Bruker "${registerUsername}" opprettet! Du kan nå logge inn.`)
 
-        // Auto-switch to login after 2 seconds
-        setTimeout(() => {
-          setShowRegister(false)
-          setRegisterSuccess("")
-          setUsername(registerUsername)
-        }, 2000)
-      }
+      // Reset form
+      setRegisterUsername("")
+      setRegisterPassword("")
+      setConfirmPassword("")
+      setIsAdmin(false)
+      setAdminCode("")
+      setShowAdminCode(false)
+
+      // Auto-switch to login after 2 seconds
+      setTimeout(() => {
+        setShowRegister(false)
+        setRegisterSuccess("")
+        setUsername(registerUsername)
+      }, 2000)
     } catch (error: any) {
+      console.error("❌ Failed to create user:", error)
       setRegisterError(error.message || "Kunne ikke opprette bruker")
     }
 
