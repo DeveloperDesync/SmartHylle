@@ -5,7 +5,13 @@ const supabaseUrl = "https://jadejiusjhyviorllqlz.supabase.co"
 const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZGVqaXVzamh5dmlvcmxscWx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMTUyOTYsImV4cCI6MjA2NTU5MTI5Nn0.SzNgJ5wepmlP6856fxyve5pYlI89t6JrmgVgyQYo_Go"
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+})
 
 // Database types
 export interface DatabaseUser {
@@ -211,6 +217,7 @@ export const supabaseAPI = {
 
   // Warnings
   async addWarning(userId: string, message: string, type: "warning" | "items_update" = "warning"): Promise<void> {
+    console.log("🚨 Adding warning to user:", userId, message)
     const { error } = await supabase.from("warnings").insert({
       user_id: userId,
       message,
@@ -218,7 +225,11 @@ export const supabaseAPI = {
       read: false,
     })
 
-    if (error) throw error
+    if (error) {
+      console.error("❌ Failed to add warning:", error)
+      throw error
+    }
+    console.log("✅ Warning added successfully")
   },
 
   async markWarningsAsRead(userId: string): Promise<void> {
@@ -275,6 +286,7 @@ export const supabaseAPI = {
   },
 
   async createNotification(notificationData: Omit<Notification, "id" | "timestamp">): Promise<Notification> {
+    console.log("📢 Creating notification:", notificationData)
     const { data, error } = await supabase
       .from("notifications")
       .insert({
@@ -285,16 +297,22 @@ export const supabaseAPI = {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("❌ Failed to create notification:", error)
+      throw error
+    }
 
+    console.log("✅ Notification created successfully")
     return dbNotificationToAppNotification(data)
   },
 }
 
-// Real-time subscriptions
+// Real-time subscriptions with better error handling
 export function subscribeToUserUpdates(userId: string, callback: (user: User) => void) {
+  console.log("🔄 Setting up user subscription for:", userId)
+
   const channel = supabase
-    .channel(`user-${userId}`)
+    .channel(`user-updates-${userId}`)
     .on(
       "postgres_changes",
       {
@@ -304,9 +322,16 @@ export function subscribeToUserUpdates(userId: string, callback: (user: User) =>
         filter: `id=eq.${userId}`,
       },
       async (payload) => {
-        console.log("User updated:", payload)
-        const user = await supabaseAPI.getUserById(userId)
-        if (user) callback(user)
+        console.log("📡 User update received:", payload)
+        try {
+          const user = await supabaseAPI.getUserById(userId)
+          if (user) {
+            console.log("✅ User data refreshed, calling callback")
+            callback(user)
+          }
+        } catch (error) {
+          console.error("❌ Failed to refresh user data:", error)
+        }
       },
     )
     .on(
@@ -318,21 +343,33 @@ export function subscribeToUserUpdates(userId: string, callback: (user: User) =>
         filter: `user_id=eq.${userId}`,
       },
       async (payload) => {
-        console.log("New warning:", payload)
-        const user = await supabaseAPI.getUserById(userId)
-        if (user) callback(user)
+        console.log("🚨 New warning received:", payload)
+        try {
+          const user = await supabaseAPI.getUserById(userId)
+          if (user) {
+            console.log("✅ User data refreshed with new warning")
+            callback(user)
+          }
+        } catch (error) {
+          console.error("❌ Failed to refresh user data after warning:", error)
+        }
       },
     )
-    .subscribe()
+    .subscribe((status) => {
+      console.log("📡 User subscription status:", status)
+    })
 
   return () => {
+    console.log("🔌 Unsubscribing from user updates")
     supabase.removeChannel(channel)
   }
 }
 
 export function subscribeToNotifications(callback: (notifications: Notification[]) => void) {
+  console.log("🔄 Setting up notifications subscription")
+
   const channel = supabase
-    .channel("notifications")
+    .channel("notifications-updates")
     .on(
       "postgres_changes",
       {
@@ -340,15 +377,45 @@ export function subscribeToNotifications(callback: (notifications: Notification[
         schema: "public",
         table: "notifications",
       },
-      async () => {
-        console.log("New notification!")
-        const notifications = await supabaseAPI.getNotifications()
-        callback(notifications)
+      async (payload) => {
+        console.log("📢 New notification received:", payload)
+        try {
+          const notifications = await supabaseAPI.getNotifications()
+          console.log("✅ Notifications refreshed")
+          callback(notifications)
+        } catch (error) {
+          console.error("❌ Failed to refresh notifications:", error)
+        }
       },
     )
-    .subscribe()
+    .subscribe((status) => {
+      console.log("📡 Notifications subscription status:", status)
+    })
 
   return () => {
+    console.log("🔌 Unsubscribing from notifications")
     supabase.removeChannel(channel)
   }
+}
+
+// Test real-time connection
+export async function testRealtimeConnection(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const channel = supabase.channel("test-connection").subscribe((status) => {
+      console.log("🧪 Real-time test status:", status)
+      if (status === "SUBSCRIBED") {
+        supabase.removeChannel(channel)
+        resolve(true)
+      } else if (status === "CLOSED" || status === "CHANNEL_ERROR") {
+        supabase.removeChannel(channel)
+        resolve(false)
+      }
+    })
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      supabase.removeChannel(channel)
+      resolve(false)
+    }, 5000)
+  })
 }
