@@ -7,6 +7,7 @@ import UserScreen from "@/components/UserScreen"
 import AdminScreen from "@/components/AdminScreen"
 import WarningModal from "@/components/WarningModal"
 import Loading from "@/components/Loading"
+import DebugPanel from "@/components/DebugPanel"
 import { ThemeProvider } from "@/contexts/ThemeContext"
 import { userAPI, offersAPI, notificationsAPI, initAPI, getCurrentStorageType } from "@/lib/api"
 import { subscribeToUserUpdates, subscribeToNotifications } from "@/lib/supabase"
@@ -36,11 +37,11 @@ function SmarthylleAppContent() {
   useEffect(() => {
     if (!currentUser?.id || storageType !== "supabase") return
 
-    console.log("Setting up real-time subscriptions for user:", currentUser.id)
+    console.log("🔄 Setting up real-time subscriptions for user:", currentUser.id)
 
     // Subscribe to user updates (warnings, bans, etc.)
     const unsubscribeUser = subscribeToUserUpdates(currentUser.id, (updatedUser) => {
-      console.log("Real-time user update received:", updatedUser)
+      console.log("📡 Real-time user update received:", updatedUser)
       setCurrentUser(updatedUser)
 
       // Check for new unread warnings
@@ -56,11 +57,12 @@ function SmarthylleAppContent() {
 
     // Subscribe to notifications
     const unsubscribeNotifications = subscribeToNotifications((newNotifications) => {
-      console.log("Real-time notifications update:", newNotifications)
+      console.log("📡 Real-time notifications update:", newNotifications)
       setNotifications(newNotifications)
     })
 
     return () => {
+      console.log("🔌 Unsubscribing from real-time updates")
       unsubscribeUser()
       unsubscribeNotifications()
     }
@@ -71,13 +73,13 @@ function SmarthylleAppContent() {
     setInitError(null)
 
     try {
-      console.log("Starting app initialization...")
+      console.log("🚀 Starting app initialization...")
 
       // Initialize storage (will check Supabase first, fallback to localStorage)
       const usingSupabase = await initAPI.initializeData()
       setStorageType(getCurrentStorageType())
 
-      console.log(`Using storage: ${getCurrentStorageType()}`)
+      console.log(`📊 Using storage: ${getCurrentStorageType()}`)
       if (usingSupabase) {
         console.log("✅ Supabase connected - Real-time features enabled!")
       } else {
@@ -86,7 +88,7 @@ function SmarthylleAppContent() {
 
       // Load data
       await loadData()
-      console.log("Data loading completed")
+      console.log("📦 Data loading completed")
 
       // Check for remembered user
       const rememberedUser = localStorage.getItem("smarthylle-remembered-user")
@@ -95,9 +97,9 @@ function SmarthylleAppContent() {
           const userData = JSON.parse(rememberedUser)
           const user = await userAPI.login(userData.username, userData.password)
           setCurrentUser(user)
-          console.log("Auto-login successful")
+          console.log("🔐 Auto-login successful")
         } catch (error) {
-          console.warn("Auto-login failed:", error)
+          console.warn("⚠️ Auto-login failed:", error)
           localStorage.removeItem("smarthylle-remembered-user")
         }
       }
@@ -110,11 +112,11 @@ function SmarthylleAppContent() {
       }, 30000)
 
       setIsInitializing(false)
-      console.log("App initialization completed successfully")
+      console.log("✅ App initialization completed successfully")
 
       return () => clearInterval(aiInterval)
     } catch (error) {
-      console.error("Failed to initialize app:", error)
+      console.error("❌ Failed to initialize app:", error)
       setInitError(error instanceof Error ? error.message : "Ukjent feil oppstod")
       setIsInitializing(false)
     }
@@ -122,7 +124,7 @@ function SmarthylleAppContent() {
 
   const loadData = async () => {
     try {
-      console.log("Loading data...")
+      console.log("📥 Loading data...")
 
       // Load data in parallel but handle errors individually
       const results = await Promise.allSettled([
@@ -134,31 +136,31 @@ function SmarthylleAppContent() {
       // Handle users
       if (results[0].status === "fulfilled") {
         setUsers(results[0].value)
-        console.log("Users loaded:", results[0].value.length)
+        console.log("👥 Users loaded:", results[0].value.length)
       } else {
-        console.error("Failed to load users:", results[0].reason)
+        console.error("❌ Failed to load users:", results[0].reason)
         setUsers([]) // Set empty array as fallback
       }
 
       // Handle offers
       if (results[1].status === "fulfilled") {
         setOffers(results[1].value)
-        console.log("Offers loaded:", results[1].value.length)
+        console.log("🏷️ Offers loaded:", results[1].value.length)
       } else {
-        console.error("Failed to load offers:", results[1].reason)
+        console.error("❌ Failed to load offers:", results[1].reason)
         setOffers([]) // Set empty array as fallback
       }
 
       // Handle notifications
       if (results[2].status === "fulfilled") {
         setNotifications(results[2].value)
-        console.log("Notifications loaded:", results[2].value.length)
+        console.log("🔔 Notifications loaded:", results[2].value.length)
       } else {
-        console.error("Failed to load notifications:", results[2].reason)
+        console.error("❌ Failed to load notifications:", results[2].reason)
         setNotifications([]) // Set empty array as fallback
       }
     } catch (error) {
-      console.error("Failed to load data:", error)
+      console.error("❌ Failed to load data:", error)
       // Don't throw error, just log it and continue with empty arrays
     }
   }
@@ -220,7 +222,7 @@ function SmarthylleAppContent() {
       setIsLoading(false)
       return true
     } catch (error) {
-      console.error("Login failed:", error)
+      console.error("❌ Login failed:", error)
       const errorMessage = error instanceof Error ? error.message : "Innlogging feilet"
       setLoginError(errorMessage)
       setIsLoading(false)
@@ -486,6 +488,7 @@ function SmarthylleAppContent() {
         <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full text-xs">
           {storageType === "supabase" ? "🔄 Live Database" : "📱 Demo Mode"}
         </div>
+        <DebugPanel />
       </div>
     )
   }
@@ -498,6 +501,8 @@ function SmarthylleAppContent() {
       <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full text-xs z-50">
         {storageType === "supabase" ? "🔄 Live Database" : "📱 Demo Mode"}
       </div>
+
+      <DebugPanel />
 
       {currentUser.role === "admin" && !viewAsUser ? (
         <AdminScreen
