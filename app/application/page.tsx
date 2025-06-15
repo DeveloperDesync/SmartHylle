@@ -8,7 +8,9 @@ import AdminScreen from "@/components/AdminScreen"
 import WarningModal from "@/components/WarningModal"
 import Loading from "@/components/Loading"
 import { ThemeProvider } from "@/contexts/ThemeContext"
-import { userAPI, offersAPI, notificationsAPI, initAPI } from "@/lib/api"
+import { userAPI, offersAPI, notificationsAPI, initAPI, getCurrentStorageType } from "@/lib/api"
+import { subscribeToUserUpdates, subscribeToNotifications } from "@/lib/supabase"
+import { supabaseAPI } from "@/lib/supabase"
 
 function SmarthylleAppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -24,10 +26,45 @@ function SmarthylleAppContent() {
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
   const [loginError, setLoginError] = useState<string>("")
+  const [storageType, setStorageType] = useState<"supabase" | "localStorage">("localStorage")
 
   useEffect(() => {
     initializeApp()
   }, [])
+
+  // Real-time subscriptions (only if using Supabase)
+  useEffect(() => {
+    if (!currentUser?.id || storageType !== "supabase") return
+
+    console.log("Setting up real-time subscriptions for user:", currentUser.id)
+
+    // Subscribe to user updates (warnings, bans, etc.)
+    const unsubscribeUser = subscribeToUserUpdates(currentUser.id, (updatedUser) => {
+      console.log("Real-time user update received:", updatedUser)
+      setCurrentUser(updatedUser)
+
+      // Check for new unread warnings
+      const newUnreadWarnings = updatedUser.warnings?.filter((w) => !w.read) || []
+      if (newUnreadWarnings.length > 0) {
+        setPendingWarnings(newUnreadWarnings)
+        setShowWarningModal(true)
+      }
+
+      // Update users list
+      setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
+    })
+
+    // Subscribe to notifications
+    const unsubscribeNotifications = subscribeToNotifications((newNotifications) => {
+      console.log("Real-time notifications update:", newNotifications)
+      setNotifications(newNotifications)
+    })
+
+    return () => {
+      unsubscribeUser()
+      unsubscribeNotifications()
+    }
+  }, [currentUser?.id, storageType])
 
   const initializeApp = async () => {
     setIsInitializing(true)
@@ -36,9 +73,16 @@ function SmarthylleAppContent() {
     try {
       console.log("Starting app initialization...")
 
-      // Initialize localStorage data
-      await initAPI.initializeData()
-      console.log("localStorage data initialization completed")
+      // Initialize storage (will check Supabase first, fallback to localStorage)
+      const usingSupabase = await initAPI.initializeData()
+      setStorageType(getCurrentStorageType())
+
+      console.log(`Using storage: ${getCurrentStorageType()}`)
+      if (usingSupabase) {
+        console.log("✅ Supabase connected - Real-time features enabled!")
+      } else {
+        console.log("📱 Using localStorage - Demo mode")
+      }
 
       // Load data
       await loadData()
@@ -78,7 +122,7 @@ function SmarthylleAppContent() {
 
   const loadData = async () => {
     try {
-      console.log("Loading data from localStorage...")
+      console.log("Loading data...")
 
       // Load data in parallel but handle errors individually
       const results = await Promise.allSettled([
@@ -222,18 +266,23 @@ function SmarthylleAppContent() {
       const user = users.find((u) => u.username === username)
       if (!user || !user.id) return
 
-      const warning = {
-        id: Date.now().toString(),
-        message,
-        timestamp: new Date().toISOString(),
-        read: false,
+      if (storageType === "supabase") {
+        await supabaseAPI.addWarning(user.id, message, "warning")
+      } else {
+        // For localStorage, update user warnings directly
+        const warning = {
+          id: Date.now().toString(),
+          message,
+          timestamp: new Date().toISOString(),
+          read: false,
+        }
+        const updatedWarnings = [...(user.warnings || []), warning]
+        await userAPI.updateUser(user.id, { warnings: updatedWarnings })
       }
 
-      const updatedWarnings = [...(user.warnings || []), warning]
-      await userAPI.updateUser(user.id, { warnings: updatedWarnings })
-
-      // Update local state
-      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, warnings: updatedWarnings } : u)))
+      // Refresh users list to get updated data
+      const updatedUsers = await userAPI.getUsers()
+      setUsers(updatedUsers)
     } catch (error) {
       console.error("Failed to warn user:", error)
     }
@@ -253,8 +302,14 @@ function SmarthylleAppContent() {
   }
 
   const handleRemoveOffer = async (offerId: string) => {
-    // For now just remove from local state - can implement DELETE API later
-    setOffers((prev) => prev.filter((offer) => offer.id !== offerId))
+    try {
+      await offersAPI.deleteOffer(offerId)
+      setOffers((prev) => prev.filter((offer) => offer.id !== offerId))
+    } catch (error) {
+      console.error("Failed to remove offer:", error)
+      // Still remove from UI even if backend fails
+      setOffers((prev) => prev.filter((offer) => offer.id !== offerId))
+    }
   }
 
   const handleToggleFavorite = async (offerId: string) => {
@@ -311,26 +366,30 @@ function SmarthylleAppContent() {
 
       const newItemsSaved = (user.itemsSaved || 0) + itemsToAdd
 
+      // Update items saved
+      await userAPI.updateUser(user.id, { itemsSaved: newItemsSaved })
+
       // Send message to user
       const message = `🎉 Gratulerer! Du har reddet ${itemsToAdd} ${itemsToAdd === 1 ? "vare" : "varer"} fra å bli kastet. Totalt har du nå reddet ${newItemsSaved} varer!`
-      const warning = {
-        id: Date.now().toString(),
-        message,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: "items_update" as const,
+
+      if (storageType === "supabase") {
+        await supabaseAPI.addWarning(user.id, message, "items_update")
+      } else {
+        // For localStorage, update user warnings directly
+        const warning = {
+          id: Date.now().toString(),
+          message,
+          timestamp: new Date().toISOString(),
+          read: false,
+          type: "items_update" as const,
+        }
+        const updatedWarnings = [...(user.warnings || []), warning]
+        await userAPI.updateUser(user.id, { warnings: updatedWarnings })
       }
 
-      const updatedWarnings = [...(user.warnings || []), warning]
-
-      await userAPI.updateUser(user.id, {
-        itemsSaved: newItemsSaved,
-        warnings: updatedWarnings,
-      })
-
-      setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, itemsSaved: newItemsSaved, warnings: updatedWarnings } : u)),
-      )
+      // Refresh users list
+      const updatedUsers = await userAPI.getUsers()
+      setUsers(updatedUsers)
     } catch (error) {
       console.error("Failed to add items to user:", error)
     }
@@ -346,26 +405,30 @@ function SmarthylleAppContent() {
 
       const newItemsSaved = Math.max(0, currentItems - itemsToRemove)
 
+      // Update items saved
+      await userAPI.updateUser(user.id, { itemsSaved: newItemsSaved })
+
       // Send message to user
       const message = `⚠️ ${itemsToRemove} ${itemsToRemove === 1 ? "vare har" : "varer har"} blitt fjernet fra din konto av en administrator. Du har nå totalt ${newItemsSaved} reddet ${newItemsSaved === 1 ? "vare" : "varer"}. Kontakt oss hvis du mener dette er en feil.`
-      const warning = {
-        id: Date.now().toString(),
-        message,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: "items_update" as const,
+
+      if (storageType === "supabase") {
+        await supabaseAPI.addWarning(user.id, message, "items_update")
+      } else {
+        // For localStorage, update user warnings directly
+        const warning = {
+          id: Date.now().toString(),
+          message,
+          timestamp: new Date().toISOString(),
+          read: false,
+          type: "items_update" as const,
+        }
+        const updatedWarnings = [...(user.warnings || []), warning]
+        await userAPI.updateUser(user.id, { warnings: updatedWarnings })
       }
 
-      const updatedWarnings = [...(user.warnings || []), warning]
-
-      await userAPI.updateUser(user.id, {
-        itemsSaved: newItemsSaved,
-        warnings: updatedWarnings,
-      })
-
-      setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, itemsSaved: newItemsSaved, warnings: updatedWarnings } : u)),
-      )
+      // Refresh users list
+      const updatedUsers = await userAPI.getUsers()
+      setUsers(updatedUsers)
     } catch (error) {
       console.error("Failed to remove items from user:", error)
     }
@@ -386,6 +449,9 @@ function SmarthylleAppContent() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Starter Smarthylle...</p>
+          <p className="text-sm text-gray-500 mt-2">
+            {storageType === "supabase" ? "🔄 Kobler til database..." : "📱 Laster demo-data..."}
+          </p>
           {initError && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg max-w-md">
               <p className="text-red-800 text-sm font-medium">Feil ved oppstart:</p>
@@ -409,18 +475,29 @@ function SmarthylleAppContent() {
 
   if (!currentUser) {
     return (
-      <LoginScreen
-        onLogin={handleLogin}
-        rememberMe={rememberMe}
-        onRememberMeChange={setRememberMe}
-        loginError={loginError}
-      />
+      <div>
+        <LoginScreen
+          onLogin={handleLogin}
+          rememberMe={rememberMe}
+          onRememberMeChange={setRememberMe}
+          loginError={loginError}
+        />
+        {/* Storage type indicator */}
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full text-xs">
+          {storageType === "supabase" ? "🔄 Live Database" : "📱 Demo Mode"}
+        </div>
+      </div>
     )
   }
 
   return (
     <>
       {showWarningModal && <WarningModal warnings={pendingWarnings} onClose={closeWarningModal} />}
+
+      {/* Storage type indicator */}
+      <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full text-xs z-50">
+        {storageType === "supabase" ? "🔄 Live Database" : "📱 Demo Mode"}
+      </div>
 
       {currentUser.role === "admin" && !viewAsUser ? (
         <AdminScreen

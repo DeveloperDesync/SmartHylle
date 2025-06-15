@@ -1,241 +1,180 @@
-import type { User, Offer, Notification } from "@/types"
+import { supabaseAPI } from "@/lib/supabase"
+import { localStorageAsyncAPI } from "@/lib/localStorage"
+import type { User, Notification, Offer } from "@/types"
 
-// For prototype: Use localStorage as primary storage
-const USE_FIREBASE = false
+// Check if Supabase is available and tables exist
+let useSupabase = false
 
-// localStorage API functions
-const localStorageAPI = {
-  getUsers(): User[] {
-    const users = localStorage.getItem("smarthylle-users")
-    return users ? JSON.parse(users) : []
-  },
-
-  createUser(userData: Omit<User, "id">): User {
-    const users = this.getUsers()
-
-    // Check if username already exists
-    if (users.find((u) => u.username === userData.username)) {
-      throw new Error("Brukernavn eksisterer allerede")
-    }
-
-    const newUser: User = {
-      ...userData,
-      id: `user_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      lastLogin: null,
-      warnings: userData.warnings || [],
-      banned: userData.banned || false,
-      favorites: userData.favorites || [],
-      itemsSaved: userData.itemsSaved || 0,
-      barcode:
-        userData.barcode || `SH${userData.username.toUpperCase().slice(0, 3)}${Math.random().toString().slice(2, 8)}`,
-    }
-
-    users.push(newUser)
-    localStorage.setItem("smarthylle-users", JSON.stringify(users))
-    return newUser
-  },
-
-  updateUser(userId: string, updates: Partial<User>): void {
-    const users = this.getUsers()
-    const userIndex = users.findIndex((u) => u.id === userId)
-
-    if (userIndex === -1) {
-      throw new Error("Bruker ikke funnet")
-    }
-
-    users[userIndex] = { ...users[userIndex], ...updates }
-    localStorage.setItem("smarthylle-users", JSON.stringify(users))
-  },
-
-  login(username: string, password: string): User {
-    const users = this.getUsers()
-    const user = users.find((u) => u.username === username)
-
-    if (!user) {
-      throw new Error("Brukernavn ikke funnet")
-    }
-
-    if (user.password !== password) {
-      throw new Error("Feil passord")
-    }
-
-    if (user.banned) {
-      throw new Error("Kontoen din er utestengt")
-    }
-
-    // Update last login
-    this.updateUser(user.id!, { lastLogin: new Date().toISOString() })
-
-    return { ...user, lastLogin: new Date().toISOString() }
-  },
-
-  getOffers(): Offer[] {
-    const offers = localStorage.getItem("smarthylle-offers")
-    return offers ? JSON.parse(offers) : []
-  },
-
-  createOffer(offerData: Omit<Offer, "id">): Offer {
-    const offers = this.getOffers()
-
-    const newOffer: Offer = {
-      ...offerData,
-      id: `offer_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    }
-
-    offers.unshift(newOffer)
-    localStorage.setItem("smarthylle-offers", JSON.stringify(offers))
-    return newOffer
-  },
-
-  getNotifications(): Notification[] {
-    const notifications = localStorage.getItem("smarthylle-notifications")
-    return notifications ? JSON.parse(notifications) : []
-  },
-
-  createNotification(notificationData: Omit<Notification, "id" | "timestamp">): Notification {
-    const notifications = this.getNotifications()
-
-    const newNotification: Notification = {
-      ...notificationData,
-      id: `notification_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    }
-
-    notifications.unshift(newNotification)
-    // Keep only last 10 notifications
-    const limitedNotifications = notifications.slice(0, 10)
-    localStorage.setItem("smarthylle-notifications", JSON.stringify(limitedNotifications))
-    return newNotification
-  },
-
-  initializeData(): void {
-    // Check if data already exists
-    const existingUsers = this.getUsers()
-    if (existingUsers.length > 0) {
-      console.log("Data already initialized")
-      return
-    }
-
-    console.log("Initializing localStorage data...")
-
-    // Create initial users
-    const initialUsers = [
-      { username: "bruker1", password: "pass1", role: "user", fullName: "Test Bruker 1" },
-      { username: "bruker2", password: "pass2", role: "user", fullName: "Test Bruker 2" },
-      { username: "bruker3", password: "pass3", role: "user", fullName: "Test Bruker 3" },
-      { username: "bruker4", password: "pass4", role: "user", fullName: "Test Bruker 4" },
-      { username: "bruker5", password: "pass5", role: "user", fullName: "Test Bruker 5" },
-      { username: "admin1", password: "adminpass1", role: "admin", fullName: "Admin 1" },
-      { username: "admin2", password: "adminpass2", role: "admin", fullName: "Admin 2" },
-    ]
-
-    for (const user of initialUsers) {
-      this.createUser({
-        ...user,
-        itemsSaved: Math.floor(Math.random() * 50),
-        warnings: [],
-        favorites: [],
-        banned: false,
-      })
-    }
-
-    // Create initial offers
-    const initialOffers = [
-      {
-        productName: "Økologisk melk",
-        discount: 30,
-        expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        description: "Fersk økologisk melk som utløper snart",
-      },
-      {
-        productName: "Fersk laks",
-        discount: 40,
-        expiryDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        description: "Høykvalitets laks, perfekt for middag",
-      },
-      {
-        productName: "Italiensk pasta",
-        discount: 25,
-        expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        description: "Autentisk italiensk pasta på tilbud",
-      },
-    ]
-
-    for (const offer of initialOffers) {
-      this.createOffer(offer)
-    }
-
-    // Create initial notifications
-    const initialNotifications = [
-      {
-        productName: "Økologisk melk",
-        discount: 30,
-        description: "Ny rabatt tilgjengelig på økologisk melk!",
-      },
-      {
-        productName: "Fersk laks",
-        discount: 40,
-        description: "Stor rabatt på fersk laks - ikke gå glipp av dette!",
-      },
-    ]
-
-    for (const notification of initialNotifications) {
-      this.createNotification(notification)
-    }
-
-    console.log("localStorage data initialized successfully")
-  },
+async function checkSupabaseAvailability() {
+  try {
+    await supabaseAPI.getUsers()
+    useSupabase = true
+    console.log("✅ Supabase is available and configured")
+    return true
+  } catch (error) {
+    console.warn("⚠️ Supabase not available, falling back to localStorage:", error)
+    useSupabase = false
+    return false
+  }
 }
 
-// Export API functions
+// Initialize and check which storage to use
+export async function initializeStorage() {
+  const supabaseAvailable = await checkSupabaseAvailability()
+
+  if (!supabaseAvailable) {
+    // Initialize localStorage as fallback
+    await localStorageAsyncAPI.initializeData()
+  }
+
+  return supabaseAvailable
+}
+
+// Unified API that automatically chooses between Supabase and localStorage
 export const userAPI = {
-  async login(username: string, password: string): Promise<User> {
-    return localStorageAPI.login(username, password)
-  },
-
   async getUsers(): Promise<User[]> {
-    return localStorageAPI.getUsers()
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.getUsers()
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.getUsers()
+      }
+    }
+    return await localStorageAsyncAPI.getUsers()
   },
 
-  async createUser(userData: Omit<User, "id">): Promise<User> {
-    return localStorageAPI.createUser(userData)
+  async getUserById(id: string): Promise<User | null> {
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.getUserById(id)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.getUserById(id)
+      }
+    }
+    return await localStorageAsyncAPI.getUserById(id)
+  },
+
+  async login(username: string, password: string): Promise<User> {
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.login(username, password)
+      } catch (error) {
+        console.warn("Supabase login failed, trying localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.login(username, password)
+      }
+    }
+    return await localStorageAsyncAPI.login(username, password)
+  },
+
+  async createUser(userData: Omit<User, "id" | "warnings">): Promise<User> {
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.createUser(userData)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.createUser(userData)
+      }
+    }
+    return await localStorageAsyncAPI.createUser(userData)
   },
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    localStorageAPI.updateUser(id, updates)
-    const users = localStorageAPI.getUsers()
-    const updatedUser = users.find((u) => u.id === id)
-    if (!updatedUser) {
-      throw new Error("User not found after update")
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.updateUser(id, updates)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.updateUser(id, updates)
+      }
     }
-    return updatedUser
+    return await localStorageAsyncAPI.updateUser(id, updates)
   },
 }
 
 export const offersAPI = {
   async getOffers(): Promise<Offer[]> {
-    return localStorageAPI.getOffers()
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.getOffers()
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.getOffers()
+      }
+    }
+    return await localStorageAsyncAPI.getOffers()
   },
 
   async createOffer(offerData: Omit<Offer, "id">): Promise<Offer> {
-    return localStorageAPI.createOffer(offerData)
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.createOffer(offerData)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.createOffer(offerData)
+      }
+    }
+    return await localStorageAsyncAPI.createOffer(offerData)
+  },
+
+  async deleteOffer(id: string): Promise<void> {
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.deleteOffer(id)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.deleteOffer(id)
+      }
+    }
+    return await localStorageAsyncAPI.deleteOffer(id)
   },
 }
 
 export const notificationsAPI = {
   async getNotifications(): Promise<Notification[]> {
-    return localStorageAPI.getNotifications()
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.getNotifications()
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.getNotifications()
+      }
+    }
+    return await localStorageAsyncAPI.getNotifications()
   },
 
   async createNotification(notificationData: Omit<Notification, "id" | "timestamp">): Promise<Notification> {
-    return localStorageAPI.createNotification(notificationData)
+    if (useSupabase) {
+      try {
+        return await supabaseAPI.createNotification(notificationData)
+      } catch (error) {
+        console.warn("Supabase failed, falling back to localStorage:", error)
+        useSupabase = false
+        return await localStorageAsyncAPI.createNotification(notificationData)
+      }
+    }
+    return await localStorageAsyncAPI.createNotification(notificationData)
   },
 }
 
+// Legacy API for backward compatibility
 export const initAPI = {
-  async initializeData(): Promise<void> {
-    localStorageAPI.initializeData()
+  async initializeData() {
+    return await initializeStorage()
   },
+}
+
+// Export current storage type for debugging
+export function getCurrentStorageType(): "supabase" | "localStorage" {
+  return useSupabase ? "supabase" : "localStorage"
 }

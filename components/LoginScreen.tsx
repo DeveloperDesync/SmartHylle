@@ -104,26 +104,29 @@ export default function LoginScreen({ onLogin, rememberMe, onRememberMeChange, l
     }
 
     // Try to add user
-    const success = storage.addUser(newUser)
+    try {
+      const createdUser = storage.localStorageAPI.createUser(newUser)
+      const success = !!createdUser
 
-    if (success) {
-      setRegisterSuccess(`Bruker "${registerUsername}" opprettet! Du kan nå logge inn.`)
-      // Reset form
-      setRegisterUsername("")
-      setRegisterPassword("")
-      setConfirmPassword("")
-      setIsAdmin(false)
-      setAdminCode("")
-      setShowAdminCode(false)
+      if (success) {
+        setRegisterSuccess(`Bruker "${registerUsername}" opprettet! Du kan nå logge inn.`)
+        // Reset form
+        setRegisterUsername("")
+        setRegisterPassword("")
+        setConfirmPassword("")
+        setIsAdmin(false)
+        setAdminCode("")
+        setShowAdminCode(false)
 
-      // Auto-switch to login after 2 seconds
-      setTimeout(() => {
-        setShowRegister(false)
-        setRegisterSuccess("")
-        setUsername(registerUsername)
-      }, 2000)
-    } else {
-      setRegisterError("Brukernavnet er allerede tatt. Velg et annet brukernavn.")
+        // Auto-switch to login after 2 seconds
+        setTimeout(() => {
+          setShowRegister(false)
+          setRegisterSuccess("")
+          setUsername(registerUsername)
+        }, 2000)
+      }
+    } catch (error: any) {
+      setRegisterError(error.message || "Kunne ikke opprette bruker")
     }
 
     setIsRegistering(false)
